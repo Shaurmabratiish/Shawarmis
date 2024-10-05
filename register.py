@@ -13,22 +13,45 @@ import time
 import random
 import keyboard
 from datetime import datetime
-mixer.init()
+pygame.mixer.init()
 comamnds_check = True
 
-name = "Великий шаурмабратииш пж бро кек лол анус"
-bot_name = "залупа анусовая могила член"
+bot_appeal = "Господин"
+bot_name = "Виверс"
+bot_voice = True
 
 is_track = False
 
 config_directory = "" + os.path.dirname(__file__) + "/config"
-config_boss_file = config_directory + "/фыв113.txt"
+config_boss_file = config_directory + "/config_data.txt"
 music_directory = config_directory + "/music"
 programms_direcotry = config_directory + "/programms"
 config_programms = programms_direcotry + "/config_programms.txt"
 browser_directory = config_directory + "/browser"
 config_browser = browser_directory + "/config_browser.txt"
+def config_string_values():
+    with open(config_boss_file, 'w+') as f:
+        f.write("voiceAssistentSaying=1\n")
+        f.write("botName=Рокси\n")
+        f.write("botAppeal=Никита")
+        f.close()
+        print("as")
 
+def get_config_data():
+    global bot_appeal
+    global bot_name
+    global bot_voice
+    file1 = open(config_boss_file, "r")
+    lines = file1.readlines()
+    for z in lines:
+        splittext = z.split("=")
+        print(f"Переменная: {splittext[0]}\n Значение: {splittext[1]}")
+        if splittext[0] == "botName":
+            bot_name = splittext[1]
+        elif splittext[0] == "voiceAssistentSaying":
+            bot_voice = int(splittext[1])
+        elif splittext[0] == "botAppeal":
+            bot_appeal = splittext[1]
 def start_settings_code():
     name_File = os.path.dirname(__file__)
     list_ = os.listdir(name_File)
@@ -40,6 +63,7 @@ def start_settings_code():
     print(list_)
 
 start_settings_code()
+get_config_data()
 
 if os.path.exists(config_directory):
     print("yes")
@@ -52,8 +76,7 @@ else:
     os.mkdir(config_programms)
     with open(config_programms, 'w') as f:
         print("as")
-    with open(config_boss_file, 'w') as f:
-        print("as")
+    config_string_values()
     print("Creating directory config...")
     with open(config_browser, 'w') as f:
         print("as")
@@ -62,8 +85,6 @@ def command():
     with sr.Microphone() as source:
         r = sr.Recognizer()
         print("Говорите")
-        r.pause_threshold = 1
-        r.adjust_for_ambient_noise(source, duration=1)
         audio = r.listen(source)
     try:
         zadanie = r.recognize_google(audio, language="ru-RU").lower()
@@ -153,8 +174,7 @@ def makeSomething(zadanie):
                 elif os.path.exists(music_directory) == False:
                     os.mkdir(music_directory)
                 elif os.path.exists(config_boss_file) == False:
-                    with open(config_boss_file, 'w') as f:
-                        print("as")
+                    config_string_values()
                 elif os.path.exists(browser_directory) == False:
                     os.mkdir(browser_directory)
                 elif os.path.exists(config_browser) == False:
@@ -175,6 +195,10 @@ def makeSomething(zadanie):
                     webbrowser.open(url, new=2)
             file1.close()
             comamnds_check = False
+        elif 'выключи компьютер' in zadanie:
+            comamnds_check = False
+            talk("Выключаю")
+            os.system("shutdown /s /t 1") 
     if 'выключи музыку' in zadanie:
         if is_track is True:
             mixer.music.stop()
@@ -187,40 +211,83 @@ def makeSomething(zadanie):
         if is_track is True:
             zadanie2 = zadanie.replace("звук", "")
             zadanie2 = zadanie2[1:]
-            print(zadanie2)
+            numbers = ["один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "ноль"]
+            if zadanie2 in numbers:
+                numbersjson = {
+                    "один": 1,
+                    "два": 2,
+                    "три": 3,
+                    "четыре": 4,
+                    "пять": 5,
+                    "шесть": 6,
+                    "семь": 7,
+                    "восемь": 8,
+                    "девять": 9,
+                    "ноль": 0
+                }
+                zadanie2 = numbersjson.get(zadanie2)
             try:
                 volume = int(zadanie2)
                 volume  = volume / 100
-                pygame.mixer.set_volume(volume)
+                pygame.mixer.music.set_volume(volume)
             except:
                 print(volume)
                 talk("Неопознанное число громкости, попробуйте еще раз.")
-
-            is_track = False
-            talk("Музыка успешна выключена.")
         else:
             talk("Сейчас ничего не играет")
-        comamnds_check = False 
+
+        comamnds_check = False
+    elif 'убрать голос' in zadanie:
+        talk("Голос убран")
+        global bot_voice
+        bot_voice = 0
+            
+        with open(config_boss_file, 'r') as file: 
+            data = file.readlines() 
+  
+        print(data) 
+        data[0] = "voiceAssistentSaying=0\n"
+  
+        with open(config_boss_file, 'w') as file: 
+            file.writelines(data) 
+    elif 'включить голос' in zadanie:
+        bot_voice = 1
+            
+        with open(config_boss_file, 'r') as file: 
+            data = file.readlines() 
+  
+        print(data) 
+        data[0] = "voiceAssistentSaying=1\n"
+  
+        with open(config_boss_file, 'w') as file: 
+            file.writelines(data)
+        talk("голос включен")
 def talk(text):
-    t1 = gtts.gTTS(name + ", " + text, lang='ru')
-    t1_name = "last-mp3.mp3"
-    t1.save(t1_name)
-    playsound(t1_name)
+    if bot_voice == 1:
+        t1 = gtts.gTTS(bot_appeal + ", " + text, lang='ru')
+        t1_name = "last-mp3.mp3"
+        t1.save(t1_name)
+        playsound(t1_name)
+        os.remove(t1_name)
     comamnds_check = True
-    os.remove(t1_name)
 def music_play(directory, text):
-    t1 = gtts.gTTS(name + ", " + text, lang='ru')
-    t1_name = "last-mp3.mp3"
-    t1.save(t1_name)
-    playsound(t1_name)
-    comamnds_check = True
-    os.remove(t1_name)
-    time.sleep(2)
+    if bot_voice == 1:
+        t1 = gtts.gTTS(bot_appeal + ", " + text, lang='ru')
+        t1_name = "last-mp3.mp3"
+        t1.save(t1_name)
+        playsound(t1_name)
+        os.remove(t1_name)
+        time.sleep(2)
     mixer.music.load(directory)
+    mixer.music.play()
+    mixer.music.set_volume(0.2)
+    comamnds_check = True
     global is_track
     is_track = True
-    mixer.music.play()
+
+
 while comamnds_check: 
     if keyboard.is_pressed('q'): 
         print('You Pressed A Key!')
         makeSomething(command())
+        
