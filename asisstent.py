@@ -104,109 +104,97 @@ def command():
 
 def makeSomething(zadanie):
     global is_track
-    if is_track is False:
-        if 'стоп' in zadanie:
-            comamnds_check = False
-            talk("Да, конечно, без проблем")
-            sys.exit()
-        elif 'имя' in zadanie:
-            comamnds_check = False
-            text2 = f"Меня зовут {bot_name}. Я голосовой помощник."
-            talk(text2)
-        elif 'открой программу' in zadanie:
-            zadanie2 = zadanie.replace("открой программу", "")
-            zadanie2 = zadanie2[1:]
-            file1 = open(config_programms, "r", encoding='utf-8')
-            lines = file1.readlines()
-            for line in lines:
-                parts = line.split(";")
-                print(parts)
-                if zadanie2 in parts:
-                    print("fing programm")
-                    talk("Программа найдена, начинаю запуск...")
-                    program_path = f"{parts[1]}" 
-                    subprocess.Popen(program_path)
-            file1.close()   
-            comamnds_check = False
-            """
-            try:
-                program_path = "C:/Users/volnk/Downloads/Cristalix.exe" 
-                subprocess.Popen(program_path)
-                text = "Программа успешно запущена"
-                talk(text) 
-                print(f"Программа {program_path} успешно запущена.") 
-            except FileNotFoundError: 
-                print(f"Программа {program_path} не найдена.") 
-            except Exception as e: 
-                print(f"Произошла ошибка при запуске программы: {e}")
-            """
-        elif 'время' in zadanie:    
-            comamnds_check = False
-            now = datetime.now()
-            current_time = now.strftime("%H:%M:%S")
-            text = "Текущее время: " + current_time
-            talk(text)
-        elif 'включи песню' in zadanie:
-            comamnds_check = False
-            zadanie2 = zadanie.replace("включи песню", "")
-            zadanie2 = zadanie2[1:]
-            check_track = False
-            print(zadanie2)
-            list_music = os.listdir(music_directory)
-            print(list_music)
-            for z in list_music:
-                print(z)
-                if '.mp3' in z:
-                    print("find mp3 file")
-                    music_files = (f"{music_directory}/{z}")
-                    print(music_files)
-                    if zadanie2 in z:
-                        if check_track == False:
-                            print('find music')
-                            music_play(music_files, f"Включаю песню, {zadanie2}")
-                            check_track = True
-                        else:
-                            talk("Найденно два файла с одноименным названием. Ошибка")
-                            check_track = False
-            if check_track == False:
-                talk("Не найденная песня")
-        elif 'проверить целостность файлов' in zadanie:
-            comamnds_check = False
-            if os.path.exists(config_directory):
-                if os.path.exists(programms_direcotry) == False:
-                    os.mkdir(programms_direcotry)
-                elif os.path.exists(config_programms) == False:
-                    with open(config_programms, 'w') as f:
-                        print("as")
-                elif os.path.exists(music_directory) == False:
-                    os.mkdir(music_directory)
-                elif os.path.exists(config_boss_file) == False:
-                    config_string_values()
-                elif os.path.exists(browser_directory) == False:
-                    os.mkdir(browser_directory)
-                elif os.path.exists(config_browser) == False:
-                    with open(config_browser, 'w') as f:
-                        print("as")
-        elif 'открой сайт' in zadanie:
-            zadanie2 = zadanie.replace("открой сайт", "")
-            zadanie2 = zadanie2[1:]
-            file1 = open(config_browser, "r", encoding='utf-8')
-            lines = file1.readlines()
-            for line in lines:
-                parts = line.split(";")
-                print(parts)
-                if zadanie2 in parts:
-                    print("find site")
-                    talk("Сайт найден, открываю....")
-                    url = f"{parts[1]}" 
-                    webbrowser.open(url, new=2)
-            file1.close()
-            comamnds_check = False
-        elif 'выключи компьютер' in zadanie:
-            comamnds_check = False
-            talk("Выключаю")
-            os.system("shutdown /s /t 1") 
-    if 'выключи музыку' in zadanie:
+    if 'стоп' in zadanie:
+        comamnds_check = False
+        talk("Да, конечно, без проблем")
+        sys.exit()
+    elif 'имя' in zadanie:
+        comamnds_check = False
+        text2 = f"Меня зовут {bot_name}. Я голосовой помощник."
+        talk(text2)
+    elif 'открой программу' in zadanie:
+        zadanie2 = zadanie.replace("открой программу", "")
+        zadanie2 = zadanie2[1:]
+        file1 = open(config_programms, "r", encoding='utf-8')
+        lines = file1.readlines()
+        for line in lines:
+            partss = line.split(";")
+            print(partss)
+            if zadanie2 in partss:
+                print("fing programm")
+                talk("Программа найдена, начинаю запуск...")
+                program_paths = f"{partss[1]}"
+                print(program_paths)
+                os.system(program_paths)
+        file1.close()   
+        comamnds_check = False
+    elif 'время' in zadanie:    
+        comamnds_check = False
+        now = datetime.now()
+        current_time = now.strftime("%H:%M:%S")
+        text = "Текущее время: " + current_time
+        talk(text)
+    elif 'включи песню' in zadanie:
+        comamnds_check = False
+        zadanie2 = zadanie.replace("включи песню", "")
+        zadanie2 = zadanie2[1:]
+        check_track = False
+        print(zadanie2)
+        list_music = os.listdir(music_directory)
+        print(list_music)
+        for z in list_music:
+            print(z)
+            if '.mp3' in z:
+                print("find mp3 file")
+                music_files = (f"{music_directory}/{z}")
+                print(music_files)
+                if zadanie2 in z:
+                    if check_track == False:
+                        print('find music')
+                        music_play(music_files, f"Включаю песню, {zadanie2}")
+                        check_track = True
+                    else:
+                        talk("Найденно два файла с одноименным названием. Ошибка")
+                        check_track = False
+        if check_track == False:
+            talk("Не найденная песня")
+    elif 'проверить целостность файлов' in zadanie:
+        comamnds_check = False
+        if os.path.exists(config_directory):
+            if os.path.exists(programms_direcotry) == False:
+                os.mkdir(programms_direcotry)
+            elif os.path.exists(config_programms) == False:
+                with open(config_programms, 'w') as f:
+                    print("as")
+            elif os.path.exists(music_directory) == False:
+                os.mkdir(music_directory)
+            elif os.path.exists(config_boss_file) == False:
+                config_string_values()
+            elif os.path.exists(browser_directory) == False:
+                os.mkdir(browser_directory)
+            elif os.path.exists(config_browser) == False:
+                with open(config_browser, 'w') as f:
+                    print("as")
+    elif 'открой сайт' in zadanie:
+        zadanie2 = zadanie.replace("открой сайт", "")
+        zadanie2 = zadanie2[1:]
+        file1 = open(config_browser, "r", encoding='utf-8')
+        lines = file1.readlines()
+        for line in lines:
+            parts = line.split(";")
+            print(parts)
+            if zadanie2 in parts:
+                print("find site")
+                talk("Сайт найден, открываю....")
+                url = f"{parts[1]}" 
+                webbrowser.open(url, new=2)
+        file1.close()
+        comamnds_check = False
+    elif 'выключи компьютер' in zadanie:
+        comamnds_check = False
+        talk("Выключаю")
+        os.system("shutdown /s /t 1") 
+    elif 'выключи музыку' in zadanie:
         if is_track is True:
             mixer.music.stop()
             is_track = False
@@ -283,6 +271,20 @@ def makeSomething(zadanie):
             with open(config_boss_file, 'r') as file: 
                 data = file.readlines() 
             data[3] = "repeatMusic=-1\n"
+            with open(config_boss_file, 'w') as file: 
+                file.writelines(data)
+    elif 'выключи повтор песни' in zadanie:
+        comamnds_check = False
+        if is_track is True:
+            time_music = pygame.mixer.music.get_pos() / 1000
+            print(f"time: {time_music}\n")
+            mixer.music.stop()
+            mixer.music.load(last_load_music)
+            mixer.music.play(0, time_music)
+            mixer.music.set_volume(0.2)
+            with open(config_boss_file, 'r') as file: 
+                data = file.readlines() 
+            data[3] = "repeatMusic=0\n"
             with open(config_boss_file, 'w') as file: 
                 file.writelines(data)
 def talk(text):
