@@ -19,6 +19,8 @@ comamnds_check = True
 bot_appeal = "Господин"
 bot_name = "Виверс"
 bot_voice = True
+last_load_music = ""
+bot_repeat_music = 0
 
 is_track = False
 
@@ -33,7 +35,8 @@ def config_string_values():
     with open(config_boss_file, 'w+') as f:
         f.write("voiceAssistentSaying=1\n")
         f.write("botName=Рокси\n")
-        f.write("botAppeal=Никита")
+        f.write("botAppeal=Никита\n")
+        f.write("repeatMusic=0")
         f.close()
         print("as")
 
@@ -41,6 +44,7 @@ def get_config_data():
     global bot_appeal
     global bot_name
     global bot_voice
+    global bot_repeat_music
     file1 = open(config_boss_file, "r")
     lines = file1.readlines()
     for z in lines:
@@ -52,6 +56,9 @@ def get_config_data():
             bot_voice = int(splittext[1])
         elif splittext[0] == "botAppeal":
             bot_appeal = splittext[1]
+        elif splittext[0] == "repeatMusic":
+            bot_repeat_music = int(splittext[1])
+
 def start_settings_code():
     name_File = os.path.dirname(__file__)
     list_ = os.listdir(name_File)
@@ -238,6 +245,7 @@ def makeSomething(zadanie):
 
         comamnds_check = False
     elif 'убрать голос' in zadanie:
+        comamnds_check = False
         talk("Голос убран")
         global bot_voice
         bot_voice = 0
@@ -251,6 +259,7 @@ def makeSomething(zadanie):
         with open(config_boss_file, 'w') as file: 
             file.writelines(data) 
     elif 'включить голос' in zadanie:
+        comamnds_check = False
         bot_voice = 1
             
         with open(config_boss_file, 'r') as file: 
@@ -262,6 +271,20 @@ def makeSomething(zadanie):
         with open(config_boss_file, 'w') as file: 
             file.writelines(data)
         talk("голос включен")
+    elif 'включи повтор песни' in zadanie:
+        comamnds_check = False
+        if is_track is True:
+            time_music = pygame.mixer.music.get_pos() / 1000
+            print(f"time: {time_music}\n")
+            mixer.music.stop()
+            mixer.music.load(last_load_music)
+            mixer.music.play(-1, time_music)
+            mixer.music.set_volume(0.2)
+            with open(config_boss_file, 'r') as file: 
+                data = file.readlines() 
+            data[3] = "repeatMusic=-1\n"
+            with open(config_boss_file, 'w') as file: 
+                file.writelines(data)
 def talk(text):
     if bot_voice == 1:
         t1 = gtts.gTTS(bot_appeal + ", " + text, lang='ru')
@@ -271,6 +294,9 @@ def talk(text):
         os.remove(t1_name)
     comamnds_check = True
 def music_play(directory, text):
+    global last_load_music
+    global bot_repeat_music
+    last_load_music = directory
     if bot_voice == 1:
         t1 = gtts.gTTS(bot_appeal + ", " + text, lang='ru')
         t1_name = "last-mp3.mp3"
@@ -279,7 +305,7 @@ def music_play(directory, text):
         os.remove(t1_name)
         time.sleep(2)
     mixer.music.load(directory)
-    mixer.music.play()
+    mixer.music.play(bot_repeat_music)
     mixer.music.set_volume(0.2)
     comamnds_check = True
     global is_track
@@ -290,4 +316,3 @@ while comamnds_check:
     if keyboard.is_pressed('q'): 
         print('You Pressed A Key!')
         makeSomething(command())
-        
