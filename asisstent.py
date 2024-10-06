@@ -10,18 +10,24 @@ from pygame import mixer
 from playsound import playsound 
 import subprocess
 import time
+from threading import Thread
 import random
+import asyncio
 import keyboard
 from datetime import datetime
 pygame.mixer.init()
+pygame.display.init() 
 comamnds_check = True
-
+playlist_list = []
 bot_appeal = "Господин"
 bot_name = "Виверс"
+running = False
 bot_voice = True
+playlist_check = False
 last_load_music = ""
 bot_repeat_music = 0
-
+volume_sound = 0.2
+playlist_already_ready = 0
 is_track = False
 
 config_directory = "" + os.path.dirname(__file__) + "/config"
@@ -36,15 +42,16 @@ def config_string_values():
         f.write("voiceAssistentSaying=1\n")
         f.write("botName=Рокси\n")
         f.write("botAppeal=Никита\n")
-        f.write("repeatMusic=0")
+        f.write("repeatMusic=0\n")
+        f.write("volumeSound=0.2\n")
         f.close()
         print("as")
-
 def get_config_data():
     global bot_appeal
     global bot_name
     global bot_voice
     global bot_repeat_music
+    global volume_sound
     file1 = open(config_boss_file, "r")
     lines = file1.readlines()
     for z in lines:
@@ -58,6 +65,9 @@ def get_config_data():
             bot_appeal = splittext[1]
         elif splittext[0] == "repeatMusic":
             bot_repeat_music = int(splittext[1])
+        elif splittext[0] == "volumeSound":
+            volume_sound = float(splittext[1])
+
 
 def start_settings_code():
     name_File = os.path.dirname(__file__)
@@ -69,24 +79,24 @@ def start_settings_code():
             os.remove(name_File + f"/{z}")
     print(list_)
 
-start_settings_code()
-get_config_data()
 
 if os.path.exists(config_directory):
     print("yes")
 else:
     os.mkdir(config_directory)
     os.mkdir(browser_directory)
-
+    config_string_values()
     os.mkdir(music_directory)
     os.mkdir(programms_direcotry)
-    os.mkdir(config_programms)
     with open(config_programms, 'w') as f:
         print("as")
     config_string_values()
     print("Creating directory config...")
     with open(config_browser, 'w') as f:
         print("as")
+
+start_settings_code()
+get_config_data()
 print(config_directory)
 def command():
     with sr.Microphone() as source:
@@ -195,41 +205,51 @@ def makeSomething(zadanie):
         talk("Выключаю")
         os.system("shutdown /s /t 1") 
     elif 'выключи музыку' in zadanie:
+        global running
         if is_track is True:
             mixer.music.stop()
             is_track = False
+            if running is True:
+                main_func()
+                running = False
             talk("Музыка успешна выключена.")
         else:
             talk("Сейчас ничего не играет")
         comamnds_check = False
     elif 'звук' in zadanie:
         if is_track is True:
-            zadanie2 = zadanie.replace("звук", "")
-            zadanie2 = zadanie2[1:]
-            numbers = ["один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "ноль"]
-            if zadanie2 in numbers:
-                numbersjson = {
-                    "один": 1,
-                    "два": 2,
-                    "три": 3,
-                    "четыре": 4,
-                    "пять": 5,
-                    "шесть": 6,
-                    "семь": 7,
-                    "восемь": 8,
-                    "девять": 9,
-                    "ноль": 0
-                }
-                zadanie2 = numbersjson.get(zadanie2)
-            try:
-                volume = int(zadanie2)
-                volume  = volume / 100
-                pygame.mixer.music.set_volume(volume)
-            except:
-                print(volume)
-                talk("Неопознанное число громкости, попробуйте еще раз.")
-        else:
-            talk("Сейчас ничего не играет")
+            if playlist_check is False:
+                zadanie2 = zadanie.replace("звук", "")
+                zadanie2 = zadanie2[1:]
+                numbers = ["один", "два", "три", "четыре", "пять", "шесть", "семь", "восемь", "девять", "ноль"]
+                if zadanie2 in numbers:
+                    numbersjson = {
+                        "один": 1,
+                        "два": 2,
+                        "три": 3,
+                        "четыре": 4,
+                        "пять": 5,
+                        "шесть": 6,
+                        "семь": 7,
+                        "восемь": 8,
+                        "девять": 9,
+                        "ноль": 0
+                    }
+                    zadanie2 = numbersjson.get(zadanie2)
+                try:
+                    volume = int(zadanie2)
+                    volume  = volume / 100
+                    pygame.mixer.music.set_volume(volume)
+                    with open(config_boss_file, 'r') as file: 
+                        data = file.readlines() 
+                    data[4] = f"volumeSound={volume}\n"
+                    with open(config_boss_file, 'w') as file: 
+                        file.writelines(data)
+                except:
+                    print(volume)
+                    talk("Неопознанное число громкости, попробуйте еще раз.")
+            else:
+                talk("Сейчас ничего не играет")
 
         comamnds_check = False
     elif 'убрать голос' in zadanie:
@@ -267,7 +287,8 @@ def makeSomething(zadanie):
             mixer.music.stop()
             mixer.music.load(last_load_music)
             mixer.music.play(-1, time_music)
-            mixer.music.set_volume(0.2)
+            global volume_sound
+            mixer.music.set_volume(volume_sound)
             with open(config_boss_file, 'r') as file: 
                 data = file.readlines() 
             data[3] = "repeatMusic=-1\n"
@@ -281,12 +302,37 @@ def makeSomething(zadanie):
             mixer.music.stop()
             mixer.music.load(last_load_music)
             mixer.music.play(0, time_music)
-            mixer.music.set_volume(0.2)
+            mixer.music.set_volume(volume_sound)
             with open(config_boss_file, 'r') as file: 
                 data = file.readlines() 
             data[3] = "repeatMusic=0\n"
             with open(config_boss_file, 'w') as file: 
                 file.writelines(data)
+    elif 'включи плейлист' in zadanie:
+        zadanie2 = zadanie.replace("включи плейлист", "")
+        zadanie2 = zadanie2[1:]
+        directory_playlist = "a"
+        check_track = False
+        print(zadanie2)
+        list_music = os.listdir(music_directory)
+        print(list_music)
+        for z in list_music:
+            print(z)
+            name_playlist = "playlist." + zadanie2 
+            if name_playlist in z:
+                directory_playlist = music_directory + "/" + name_playlist
+        playlist_directory_name_music = []
+        if directory_playlist != "a":
+            files = os.listdir(directory_playlist)
+            if len(files) > 0:
+                for x in files:
+                    if ".mp3" in x:
+                        print(f"find mp3 file: {x}")
+                        music_playlist_directory = directory_playlist + "/" + x
+                        playlist_directory_name_music.append(music_playlist_directory)
+                print(f"playlist list: {playlist_directory_name_music}")
+                playlist_play(playlist_directory_name_music)
+                main_func()
 def talk(text):
     if bot_voice == 1:
         t1 = gtts.gTTS(bot_appeal + ", " + text, lang='ru')
@@ -306,15 +352,55 @@ def music_play(directory, text):
         playsound(t1_name)
         os.remove(t1_name)
         time.sleep(2)
+    global volume_sound
     mixer.music.load(directory)
     mixer.music.play(bot_repeat_music)
-    mixer.music.set_volume(0.2)
+    print(f"volume: {volume_sound}")
+    mixer.music.set_volume(volume_sound)
     comamnds_check = True
     global is_track
     is_track = True
 
+def playlist_play(playlist):
+    comamnds_check = True
+    global playlist_check
+    playlist_check = True
+    pygame.mixer.music.load ( playlist.pop() )  
+    pygame.mixer.music.queue ( playlist.pop() )
+    global is_track
+    global volume_sound
+    global running
+    is_track = True
+    plylist_len = len(playlist)
+    len_play = 0
+    pygame.mixer.music.set_endevent(pygame.USEREVENT) 
+    pygame.mixer.music.play()
+    mixer.music.set_volume(volume_sound)
+    running = True
+    playlist_already_ready = 1
+    while running:
+        time.sleep(1)
+        print("ads")
+        if running is True:
+            main_func()
+            for event in pygame.event.get():
+                len_play += 1
+                print("track end")
+                if len_play == plylist_len:
+                    print("all tracks end")
+                if event.type == pygame.USEREVENT:    # A track has ended
+                    if len ( playlist ) > 0:       # If there are more tracks in the queue...
+                        pygame.mixer.music.queue (playlist.pop())
+                    else:
+                        print(f"end: {playlist}")
+                        pygame.mixer.music.queue ( playlist.pop() )
+    print("end")
 
-while comamnds_check: 
-    if keyboard.is_pressed('q'): 
-        print('You Pressed A Key!')
-        makeSomething(command())
+def main_func():
+    while comamnds_check: 
+        if keyboard.is_pressed('q'):
+            print('true')
+            print('You Pressed A Key!')
+            makeSomething(command())
+if playlist_already_ready == 0:
+    main_func()
